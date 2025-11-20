@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import {
     Appbar,
@@ -10,6 +9,7 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomSwitch from "../components/CustomSwitch";
+import { usePreferences } from "../context/PreferencesContext";
 
 const ACCENT_COLORS = [
     "#9C27B0",
@@ -24,9 +24,8 @@ const ACCENT_COLORS = [
 
 const SettingsScreen = ({ navigation }: any) => {
     const theme = useTheme();
-
-    const [isDarkMode, setIsDarkMode] = useState(true);
-    const [selectedColor, setSelectedColor] = useState(ACCENT_COLORS[0]);
+    const { isDarkMode, toggleTheme, seedColor, setSeedColor } =
+        usePreferences();
 
     return (
         <SafeAreaView
@@ -70,7 +69,7 @@ const SettingsScreen = ({ navigation }: any) => {
                         </Text>
                         <CustomSwitch
                             value={isDarkMode}
-                            onValueChange={setIsDarkMode}
+                            onValueChange={toggleTheme}
                         />
                     </View>
 
@@ -89,13 +88,13 @@ const SettingsScreen = ({ navigation }: any) => {
                             {ACCENT_COLORS.map((color) => (
                                 <TouchableOpacity
                                     key={color}
-                                    onPress={() => setSelectedColor(color)}
+                                    onPress={() => setSeedColor(color)}
                                     style={[
                                         styles.colorCircle,
                                         { backgroundColor: color },
                                     ]}
                                 >
-                                    {selectedColor === color && (
+                                    {seedColor === color && (
                                         <View>
                                             <Icon
                                                 source="check"
@@ -148,6 +147,7 @@ const SettingsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingHorizontal: 6,
     },
     headerTitle: {
         fontWeight: "bold",
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     sectionTitle: {
-        fontSize: 12,
+        fontSize: 16,
         fontWeight: "bold",
         marginBottom: 16,
         letterSpacing: 1,
@@ -177,22 +177,24 @@ const styles = StyleSheet.create({
     },
     colorSection: {
         marginTop: 8,
+        gap: 6,
     },
     colorGrid: {
         flexDirection: "row",
         flexWrap: "wrap",
-        gap: 16,
+        // gap: 16,
+        justifyContent: "space-between",
     },
     colorCircle: {
-        width: 42,
-        height: 42,
-        borderRadius: 21,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         justifyContent: "center",
         alignItems: "center",
     },
     divider: {
         marginVertical: 8,
-        opacity: 0.2,
+        // opacity: 0.2,
     },
 });
 

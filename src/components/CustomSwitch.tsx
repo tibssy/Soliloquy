@@ -32,7 +32,7 @@ const CustomSwitch = ({ value, onValueChange, style }: CustomSwitchProps) => {
 
     const thumbTranslate = animatedValue.interpolate({
         inputRange: [0, 1],
-        outputRange: [4, 26],
+        outputRange: [4, 20],
     });
 
     const thumbScale = animatedValue.interpolate({
@@ -64,15 +64,15 @@ const CustomSwitch = ({ value, onValueChange, style }: CustomSwitchProps) => {
 
 const styles = StyleSheet.create({
     track: {
-        width: 56,
-        height: 32,
-        borderRadius: 16,
+        width: 46,
+        height: 28,
+        borderRadius: 14,
         justifyContent: "center",
     },
     thumb: {
-        width: 26,
-        height: 26,
-        borderRadius: 13,
+        width: 22,
+        height: 22,
+        borderRadius: 11,
         position: "absolute",
         left: 0,
     },

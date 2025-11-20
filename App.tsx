@@ -1,5 +1,4 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useMemo } from "react";
 import { StatusBar } from "expo-status-bar";
 import { PaperProvider } from "react-native-paper";
 import { NavigationContainer } from "@react-navigation/native";
@@ -8,22 +7,28 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import ChatScreen from "./src/screens/ChatScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import { createThemeFromSeed } from "./src/utils/createTheme";
-
-const SEED_COLOR = "#B8B8B8";
-const DARK_MODE = true;
-
-const theme = {
-    ...createThemeFromSeed(SEED_COLOR, DARK_MODE),
-    roundness: 2,
-};
+import {
+    PreferencesProvider,
+    usePreferences,
+} from "./src/context/PreferencesContext";
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
+const AppContent = () => {
+    const { isDarkMode, seedColor } = usePreferences();
+
+    const theme = useMemo(() => {
+        const generatedTheme = createThemeFromSeed(seedColor, isDarkMode);
+        return {
+            ...generatedTheme,
+            roundness: 2,
+        };
+    }, [isDarkMode, seedColor]);
+
     return (
         <PaperProvider theme={theme}>
             <StatusBar
-                style="light"
+                style={isDarkMode ? "light" : "dark"}
                 backgroundColor={theme.colors.background}
             />
             <NavigationContainer>
@@ -42,5 +47,13 @@ export default function App() {
                 </Stack.Navigator>
             </NavigationContainer>
         </PaperProvider>
+    );
+};
+
+export default function App() {
+    return (
+        <PreferencesProvider>
+            <AppContent />
+        </PreferencesProvider>
     );
 }
