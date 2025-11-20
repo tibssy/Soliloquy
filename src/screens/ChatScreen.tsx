@@ -38,7 +38,7 @@ const ChatScreen = ({ navigation }: any) => {
                 {/* History Icon (Left) */}
                 <Appbar.Action
                     icon="history"
-                    onPress={() => console.log("History pressed")}
+                    onPress={() => navigation.navigate("History")}
                 />
 
                 {/* Title (Center) */}

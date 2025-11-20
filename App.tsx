@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import ChatScreen from "./src/screens/ChatScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
+import HistoryScreen from "./src/screens/HistoryScreen";
 import { createThemeFromSeed } from "./src/utils/createTheme";
 import {
     PreferencesProvider,
@@ -36,7 +37,7 @@ const AppContent = () => {
                     initialRouteName="Chat"
                     screenOptions={{
                         headerShown: false,
-                        animation: "ios_from_right",
+                        animation: "simple_push",
                         contentStyle: {
                             backgroundColor: theme.colors.background,
                         },
@@ -44,6 +45,14 @@ const AppContent = () => {
                 >
                     <Stack.Screen name="Chat" component={ChatScreen} />
                     <Stack.Screen name="Settings" component={SettingsScreen} />
+
+                    <Stack.Screen
+                        name="History"
+                        component={HistoryScreen}
+                        options={{
+                            animation: "fade_from_bottom",
+                        }}
+                    />
                 </Stack.Navigator>
             </NavigationContainer>
         </PaperProvider>
