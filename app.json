@@ -1,30 +1,72 @@
 {
-  "expo": {
-    "name": "Soliloquy",
-    "slug": "Soliloquy",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "expo": {
+        "name": "Soliloquy",
+        "slug": "Soliloquy",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "light",
+        "newArchEnabled": true,
+        "splash": {
+            "image": "./assets/splash-icon.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
+        "ios": {
+            "supportsTablet": true
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#ffffff"
+            },
+            "edgeToEdgeEnabled": false,
+            "predictiveBackGestureEnabled": false,
+            "package": "com.tibssy.Soliloquy"
+        },
+        "web": {
+            "favicon": "./assets/favicon.png"
+        },
+        "extra": {
+            "eas": {
+                "projectId": "21e799ca-9705-43b9-98c2-701dd8ee3832"
+            }
+        },
+        "plugins": [
+            [
+                "expo-font",
+                {
+                    "fonts": [
+                        "./assets/fonts/JetBrainsMono-Regular.ttf",
+                        "./assets/fonts/JetBrainsMono-Medium.ttf",
+                        "./assets/fonts/JetBrainsMono-Bold.ttf"
+                    ],
+                    "android": {
+                        "fonts": [
+                            {
+                                "fontFamily": "JetBrainsMono",
+                                "fontDefinitions": [
+                                    {
+                                        "path": "./assets/fonts/JetBrainsMono-Regular.ttf",
+                                        "weight": 400,
+                                        "style": "normal"
+                                    },
+                                    {
+                                        "path": "./assets/fonts/JetBrainsMono-Medium.ttf",
+                                        "weight": 500,
+                                        "style": "normal"
+                                    },
+                                    {
+                                        "path": "./assets/fonts/JetBrainsMono-Bold.ttf",
+                                        "weight": 700,
+                                        "style": "normal"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ]
+        ]
     }
-  }
 }

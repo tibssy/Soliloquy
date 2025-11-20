@@ -1,20 +1,28 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+// App.tsx
+import { StatusBar } from "expo-status-bar";
+import { PaperProvider } from "react-native-paper";
+import HomeScreen from "./src/screens/ChatScreen";
+import { View } from "react-native";
+import { createThemeFromSeed } from "./src/utils/createTheme";
+
+const SEED_COLOR = "#9E9E9E";
+const DARK_MODE = true;
+
+const theme = {
+    ...createThemeFromSeed(SEED_COLOR, DARK_MODE),
+    roundness: 2,
+};
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+    return (
+        <PaperProvider theme={theme}>
+            <StatusBar
+                style="light"
+                backgroundColor={theme.colors.background}
+            />
+            <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+                <HomeScreen />
+            </View>
+        </PaperProvider>
+    );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
