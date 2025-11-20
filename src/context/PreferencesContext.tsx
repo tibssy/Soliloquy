@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useMemo } from "react";
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useMemo,
+    useEffect,
+} from "react";
+import { storage, KEYS } from "../utils/storage";
 
 type PreferencesContextType = {
     isDarkMode: boolean;
@@ -19,8 +26,24 @@ export const PreferencesProvider = ({
 }: {
     children: React.ReactNode;
 }) => {
-    const [isDarkMode, setIsDarkMode] = useState(true);
-    const [seedColor, setSeedColor] = useState("#9E9E9E");
+    let initialDarkMode = true;
+    if (storage.contains(KEYS.THEME_DARK_MODE)) {
+        initialDarkMode = !!storage.getBoolean(KEYS.THEME_DARK_MODE);
+    }
+
+    const initialSeedColor =
+        storage.getString(KEYS.THEME_SEED_COLOR) ?? "#9E9E9E";
+
+    const [isDarkMode, setIsDarkMode] = useState<boolean>(initialDarkMode);
+    const [seedColor, setSeedColor] = useState<string>(initialSeedColor);
+
+    useEffect(() => {
+        storage.set(KEYS.THEME_DARK_MODE, isDarkMode);
+    }, [isDarkMode]);
+
+    useEffect(() => {
+        storage.set(KEYS.THEME_SEED_COLOR, seedColor);
+    }, [seedColor]);
 
     const toggleTheme = () => {
         setIsDarkMode((prev) => !prev);

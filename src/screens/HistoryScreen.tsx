@@ -1,9 +1,18 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { Appbar, List, Text, useTheme, Divider } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
+import { getObject, KEYS } from "../utils/storage";
 
-const HISTORY_DATA = [
+type HistoryItem = {
+    id: string;
+    title: string;
+    subtitle: string;
+    date: string;
+};
+
+const DUMMY_DATA: HistoryItem[] = [
     {
         id: "1",
         title: "Flutter vs. Flet",
@@ -16,30 +25,24 @@ const HISTORY_DATA = [
         subtitle: "Exploring the capabilities of Gemma...",
         date: "11/17",
     },
-    {
-        id: "3",
-        title: "Best Pizza Toppings",
-        subtitle: "An important and lengthy debate.",
-        date: "11/16",
-    },
-    {
-        id: "4",
-        title: "React Native Performance",
-        subtitle: "Optimizing FlatList for large datasets.",
-        date: "11/15",
-    },
-    {
-        id: "5",
-        title: "Why is the sky blue?",
-        subtitle: "Physics explanation regarding scattering.",
-        date: "11/10",
-    },
 ];
 
 const HistoryScreen = ({ navigation }: any) => {
     const theme = useTheme();
+    const [history, setHistory] = useState<HistoryItem[]>([]);
 
-    const renderItem = ({ item }: { item: (typeof HISTORY_DATA)[0] }) => (
+    useFocusEffect(
+        useCallback(() => {
+            const savedHistory = getObject<HistoryItem[]>(KEYS.CHAT_HISTORY);
+            if (savedHistory && savedHistory.length > 0) {
+                setHistory(savedHistory);
+            } else {
+                setHistory(DUMMY_DATA);
+            }
+        }, [])
+    );
+
+    const renderItem = ({ item }: { item: HistoryItem }) => (
         <List.Item
             title={item.title}
             description={item.subtitle}
@@ -91,13 +94,24 @@ const HistoryScreen = ({ navigation }: any) => {
             </Appbar.Header>
 
             <FlatList
-                data={HISTORY_DATA}
+                data={history}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
                 contentContainerStyle={styles.listContent}
                 ItemSeparatorComponent={() => (
                     <Divider style={{ opacity: 0.1 }} />
                 )}
+                ListEmptyComponent={
+                    <Text
+                        style={{
+                            textAlign: "center",
+                            marginTop: 20,
+                            color: theme.colors.onSurfaceVariant,
+                        }}
+                    >
+                        No history found.
+                    </Text>
+                }
             />
         </SafeAreaView>
     );
