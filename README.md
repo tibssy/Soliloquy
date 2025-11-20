@@ -43,7 +43,50 @@ This project uses **Expo Prebuild**. Because it relies on native code for fonts 
 ### Installation
 
 1. **Clone the repository**
+
     ```bash
     git clone https://github.com/YOUR_USERNAME/Soliloquy.git
     cd Soliloquy
     ```
+
+2. **Install Dependencies**
+
+    ```bash
+    npm install
+    ```
+
+3. **Generate Native Code & Run**
+
+    - **For Android:**
+
+    ```bash
+    npx expo run:android
+    ```
+
+    - **For iOS:**
+
+    ```bash
+    npx expo run:ios
+    ```
+
+    Note: This command will generate the android/ and ios/ directories based on the configuration in app.json.
+
+## 🗺 Roadmap
+
+-   [x] **Phase 1: Foundation**
+
+    -   Project setup with Expo & TypeScript.
+    -   Material Design 3 Dark Theme implementation.
+    -   Native JetBrains Mono font integration.
+    -   Chat UI layout.
+
+-   [ ] **Phase 2: Intelligence**
+
+    -   Integrate `llama.rn`.
+    -   Implement model loading from local storage.
+    -   Basic inference (chat loop).
+
+-   [ ] **Phase 3: Polish**
+    -   Chat history persistence (SQLite/MMKV).
+    -   Model management (Download/Delete GGUF files).
+    -   Markdown rendering for AI responses.

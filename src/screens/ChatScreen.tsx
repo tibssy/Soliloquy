@@ -1,4 +1,3 @@
-// src/screens/HomeScreen.tsx
 import React, { useState, useEffect } from "react";
 import * as NavigationBar from "expo-navigation-bar";
 import {
@@ -8,16 +7,10 @@ import {
     Platform,
     TextInput,
 } from "react-native";
-import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
-import {
-    Appbar,
-    // TextInput,
-    IconButton,
-    useTheme,
-    Surface,
-} from "react-native-paper";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Appbar, IconButton, useTheme, Surface } from "react-native-paper";
 
-const HomeScreen = () => {
+const ChatScreen = ({ navigation }: any) => {
     const theme = useTheme();
     const [text, setText] = useState("");
 
@@ -26,7 +19,7 @@ const HomeScreen = () => {
     });
 
     return (
-        <RNSafeAreaView
+        <SafeAreaView
             style={[
                 styles.safeArea,
                 { backgroundColor: theme.colors.background },
@@ -57,7 +50,7 @@ const HomeScreen = () => {
                 {/* Settings Icon (Right) */}
                 <Appbar.Action
                     icon="cog"
-                    onPress={() => console.log("Settings pressed")}
+                    onPress={() => navigation.navigate("Settings")}
                 />
             </Appbar.Header>
 
@@ -115,7 +108,7 @@ const HomeScreen = () => {
                     </Surface>
                 </View>
             </KeyboardAvoidingView>
-        </RNSafeAreaView>
+        </SafeAreaView>
     );
 };
 
@@ -156,4 +149,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default HomeScreen;
+export default ChatScreen;
