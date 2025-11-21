@@ -194,7 +194,8 @@ const styles = StyleSheet.create({
     },
     divider: {
         marginVertical: 8,
-        // opacity: 0.2,
+        height: 1,
+        // opacity: 0.4,
     },
 });
 

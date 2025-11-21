@@ -13,6 +13,7 @@ import {
     usePreferences,
 } from "./src/context/PreferencesContext";
 import ModelsScreen from "./src/screens/ModelsScreen";
+import { LlamaProvider } from "./src/context/LlamaContext";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,34 +30,39 @@ const AppContent = () => {
 
     return (
         <PaperProvider theme={theme}>
-            <StatusBar
-                style={isDarkMode ? "light" : "dark"}
-                backgroundColor={theme.colors.background}
-            />
-            <NavigationContainer>
-                <Stack.Navigator
-                    initialRouteName="Chat"
-                    screenOptions={{
-                        headerShown: false,
-                        animation: "simple_push",
-                        contentStyle: {
-                            backgroundColor: theme.colors.background,
-                        },
-                    }}
-                >
-                    <Stack.Screen name="Chat" component={ChatScreen} />
-                    <Stack.Screen name="Settings" component={SettingsScreen} />
-
-                    <Stack.Screen
-                        name="History"
-                        component={HistoryScreen}
-                        options={{
-                            animation: "fade_from_bottom",
+            <LlamaProvider>
+                <StatusBar
+                    style={isDarkMode ? "light" : "dark"}
+                    backgroundColor={theme.colors.background}
+                />
+                <NavigationContainer>
+                    <Stack.Navigator
+                        initialRouteName="Chat"
+                        screenOptions={{
+                            headerShown: false,
+                            animation: "simple_push",
+                            contentStyle: {
+                                backgroundColor: theme.colors.background,
+                            },
                         }}
-                    />
-                    <Stack.Screen name="Models" component={ModelsScreen} />
-                </Stack.Navigator>
-            </NavigationContainer>
+                    >
+                        <Stack.Screen name="Chat" component={ChatScreen} />
+                        <Stack.Screen
+                            name="Settings"
+                            component={SettingsScreen}
+                        />
+
+                        <Stack.Screen
+                            name="History"
+                            component={HistoryScreen}
+                            options={{
+                                animation: "fade_from_bottom",
+                            }}
+                        />
+                        <Stack.Screen name="Models" component={ModelsScreen} />
+                    </Stack.Navigator>
+                </NavigationContainer>
+            </LlamaProvider>
         </PaperProvider>
     );
 };

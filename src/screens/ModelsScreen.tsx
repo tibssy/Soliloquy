@@ -21,6 +21,7 @@ import {
     dismissDownloadNotification,
     showCompletionNotification,
 } from "../utils/notifications";
+import { useLlama } from "../context/LlamaContext"; //
 
 type ModelDef = {
     id: string;
@@ -56,13 +57,20 @@ const AVAILABLE_MODELS: ModelDef[] = [
         filename: "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
         url: "https://huggingface.co/unsloth/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_M.gguf?download=true",
     },
+    {
+        id: "Llama-3.2-3B",
+        name: "Llama 3.2 3B",
+        description: "Meta's latest efficient small model.",
+        sizeStr: "2.02 GB",
+        filename: "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
+        url: "https://huggingface.co/unsloth/Llama-3.2-3B-Instruct-GGUF/resolve/main/Llama-3.2-3B-Instruct-Q4_K_M.gguf?download=true",
+    },
 ];
 
 const modelsDir = new Directory(Paths.document, "models");
 
 const ModelCard = ({ model }: { model: ModelDef }) => {
     const theme = useTheme();
-
     const [isDownloaded, setIsDownloaded] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -72,6 +80,7 @@ const ModelCard = ({ model }: { model: ModelDef }) => {
         null
     );
     const lastNotificationUpdate = useRef<number>(0);
+    const { activeModelId, unloadModel } = useLlama();
 
     useEffect(() => {
         checkFileStatus();
@@ -147,13 +156,22 @@ const ModelCard = ({ model }: { model: ModelDef }) => {
         }
     };
 
-    const confirmDelete = () => {
-        if (modelFile.exists) {
-            modelFile.delete();
-            setIsDownloaded(false);
-            setProgress(0);
+    const confirmDelete = async () => {
+        try {
+            if (activeModelId === model.id) {
+                await unloadModel();
+            }
+
+            if (modelFile.exists) {
+                modelFile.delete();
+                setIsDownloaded(false);
+                setProgress(0);
+            }
+        } catch (e) {
+            console.error("Error deleting model:", e);
+        } finally {
+            setIsDeleteDialogVisible(false);
         }
-        setIsDeleteDialogVisible(false);
     };
 
     const handleCancelDownload = async () => {
