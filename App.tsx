@@ -12,6 +12,7 @@ import {
     PreferencesProvider,
     usePreferences,
 } from "./src/context/PreferencesContext";
+import ModelsScreen from "./src/screens/ModelsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -53,6 +54,7 @@ const AppContent = () => {
                             animation: "fade_from_bottom",
                         }}
                     />
+                    <Stack.Screen name="Models" component={ModelsScreen} />
                 </Stack.Navigator>
             </NavigationContainer>
         </PaperProvider>

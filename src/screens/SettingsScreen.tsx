@@ -128,7 +128,7 @@ const SettingsScreen = ({ navigation }: any) => {
                         right={(props) => (
                             <List.Icon {...props} icon="chevron-right" />
                         )}
-                        onPress={() => console.log("Manage Models")}
+                        onPress={() => navigation.navigate("Models")}
                     />
                     <List.Item
                         title="Manage Knowledge Base"
@@ -147,7 +147,6 @@ const SettingsScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 6,
     },
     headerTitle: {
         fontWeight: "bold",
@@ -155,6 +154,7 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingBottom: 24,
+        paddingHorizontal: 6,
     },
     section: {
         padding: 16,
