@@ -1,6 +1,5 @@
-// src/screens/HistoryScreen.tsx
 import React, { useCallback, useState } from "react";
-import { View, StyleSheet, FlatList, Alert } from "react-native";
+import { View, StyleSheet, FlatList } from "react-native";
 import {
     Appbar,
     List,
@@ -8,6 +7,9 @@ import {
     useTheme,
     Divider,
     IconButton,
+    Portal,
+    Dialog,
+    Button,
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
@@ -16,6 +18,8 @@ import { getChatSessions, deleteSession, ChatSession } from "../utils/storage";
 const HistoryScreen = ({ navigation }: any) => {
     const theme = useTheme();
     const [history, setHistory] = useState<ChatSession[]>([]);
+    const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState(false);
+    const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
 
     useFocusEffect(
         useCallback(() => {
@@ -35,18 +39,18 @@ const HistoryScreen = ({ navigation }: any) => {
         });
     };
 
-    const handleDelete = (id: string) => {
-        Alert.alert("Delete Chat", "Are you sure?", [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Delete",
-                style: "destructive",
-                onPress: () => {
-                    deleteSession(id);
-                    loadHistory();
-                },
-            },
-        ]);
+    const promptDelete = (id: string) => {
+        setSessionToDelete(id);
+        setIsDeleteDialogVisible(true);
+    };
+
+    const confirmDelete = () => {
+        if (sessionToDelete) {
+            deleteSession(sessionToDelete);
+            loadHistory();
+        }
+        setIsDeleteDialogVisible(false);
+        setSessionToDelete(null);
     };
 
     const renderItem = ({ item }: { item: ChatSession }) => (
@@ -78,7 +82,7 @@ const HistoryScreen = ({ navigation }: any) => {
                     <IconButton
                         icon="trash-can-outline"
                         size={16}
-                        onPress={() => handleDelete(item.id)}
+                        onPress={() => promptDelete(item.id)}
                         style={{ margin: 0, marginTop: 4 }}
                     />
                 </View>
@@ -135,6 +139,40 @@ const HistoryScreen = ({ navigation }: any) => {
                     </Text>
                 }
             />
+            {/* --- DELETE CONFIRMATION DIALOG --- */}
+            <Portal>
+                <Dialog
+                    style={{ backgroundColor: theme.colors.surfaceVariant }}
+                    visible={isDeleteDialogVisible}
+                    onDismiss={() => setIsDeleteDialogVisible(false)}
+                >
+                    <Dialog.Title
+                        style={{
+                            fontFamily: "JetBrainsMono",
+                            fontWeight: "bold",
+                        }}
+                    >
+                        Delete Conversation?
+                    </Dialog.Title>
+                    <Dialog.Content>
+                        <Text>
+                            Are you sure you want to delete this chat? This
+                            action cannot be undone.
+                        </Text>
+                    </Dialog.Content>
+                    <Dialog.Actions>
+                        <Button onPress={() => setIsDeleteDialogVisible(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onPress={confirmDelete}
+                            textColor={theme.colors.error}
+                        >
+                            Delete
+                        </Button>
+                    </Dialog.Actions>
+                </Dialog>
+            </Portal>
         </SafeAreaView>
     );
 };

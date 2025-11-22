@@ -102,7 +102,7 @@ const ChatScreen = ({ navigation, route }: any) => {
         }
     }, [route.params]);
 
-    // 3. AUTO-SAVE LOGIC
+    // AUTO-SAVE LOGIC
     useEffect(() => {
         if (messages.length === 0) return;
 
@@ -351,24 +351,8 @@ const ChatScreen = ({ navigation, route }: any) => {
                     { backgroundColor: theme.colors.surfaceVariant },
                 ]}
             >
-                {!isModelLoaded && !isModelLoading ? (
-                    <View style={styles.placeholderContainer}>
-                        <Icon
-                            source="robot-dead-outline"
-                            size={64}
-                            color={theme.colors.onSurfaceDisabled}
-                        />
-                        <Text
-                            style={{
-                                color: theme.colors.onSurfaceDisabled,
-                                marginTop: 16,
-                                fontFamily: "JetBrainsMono",
-                            }}
-                        >
-                            No model loaded.
-                        </Text>
-                    </View>
-                ) : (
+                {/* RENDER CHAT LIST */}
+                {messages.length > 0 && (
                     <FlatList
                         data={reversedMessages}
                         keyExtractor={(item) => item.id}
@@ -379,7 +363,74 @@ const ChatScreen = ({ navigation, route }: any) => {
                             isGenerating ? renderStreamingBubble() : null
                         }
                         removeClippedSubviews={false}
+                        style={
+                            !isModelLoaded && !isModelLoading
+                                ? { opacity: 0.2 }
+                                : undefined
+                        }
                     />
+                )}
+
+                {/* RENDER PLACEHOLDER / OVERLAY */}
+                {!isModelLoaded && !isModelLoading && (
+                    <View
+                        style={[
+                            styles.placeholderContainer,
+                            messages.length > 0
+                                ? StyleSheet.absoluteFill
+                                : { flex: 1 },
+                        ]}
+                    >
+                        <Surface
+                            style={[
+                                styles.overlayCard,
+                                {
+                                    backgroundColor: theme.colors.background,
+                                    borderRadius: theme.roundness * 6,
+                                },
+                            ]}
+                            elevation={1}
+                        >
+                            <Icon
+                                source="robot-dead-outline"
+                                size={48}
+                                color={theme.colors.error}
+                            />
+                            <Text
+                                style={{
+                                    color: theme.colors.onSurface,
+                                    marginTop: 16,
+                                    marginBottom: 8,
+                                    fontFamily: "JetBrainsMono",
+                                    fontWeight: "bold",
+                                }}
+                            >
+                                Brain Missing
+                            </Text>
+                            <Text
+                                style={{
+                                    color: theme.colors.onSurfaceVariant,
+                                    fontSize: 12,
+                                    marginBottom: 16,
+                                }}
+                            >
+                                Load a model to continue.
+                            </Text>
+
+                            <TouchableOpacity
+                                onPress={() => setIsSheetVisible(true)}
+                            >
+                                <Text
+                                    style={{
+                                        color: theme.colors.primary,
+                                        fontWeight: "bold",
+                                    }}
+                                >
+                                    SELECT MODEL
+                                </Text>
+                            </TouchableOpacity>
+                        </Surface>
+                    </View>
                 )}
             </View>
 
@@ -495,7 +546,13 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        opacity: 0.6,
+        zIndex: 10,
+    },
+    overlayCard: {
+        padding: 24,
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 200,
     },
     inputWrapper: {
         paddingHorizontal: 8,
