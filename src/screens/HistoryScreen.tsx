@@ -1,48 +1,55 @@
+// src/screens/HistoryScreen.tsx
 import React, { useCallback, useState } from "react";
-import { View, StyleSheet, FlatList } from "react-native";
-import { Appbar, List, Text, useTheme, Divider } from "react-native-paper";
+import { View, StyleSheet, FlatList, Alert } from "react-native";
+import {
+    Appbar,
+    List,
+    Text,
+    useTheme,
+    Divider,
+    IconButton,
+} from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
-import { getObject, KEYS } from "../utils/storage";
-
-type HistoryItem = {
-    id: string;
-    title: string;
-    subtitle: string;
-    date: string;
-};
-
-const DUMMY_DATA: HistoryItem[] = [
-    {
-        id: "1",
-        title: "Flutter vs. Flet",
-        subtitle: "A discussion about mobile development...",
-        date: "11/18",
-    },
-    {
-        id: "2",
-        title: "On-Device AI Models",
-        subtitle: "Exploring the capabilities of Gemma...",
-        date: "11/17",
-    },
-];
+import { getChatSessions, deleteSession, ChatSession } from "../utils/storage";
 
 const HistoryScreen = ({ navigation }: any) => {
     const theme = useTheme();
-    const [history, setHistory] = useState<HistoryItem[]>([]);
+    const [history, setHistory] = useState<ChatSession[]>([]);
 
     useFocusEffect(
         useCallback(() => {
-            const savedHistory = getObject<HistoryItem[]>(KEYS.CHAT_HISTORY);
-            if (savedHistory && savedHistory.length > 0) {
-                setHistory(savedHistory);
-            } else {
-                setHistory(DUMMY_DATA);
-            }
+            loadHistory();
         }, [])
     );
 
-    const renderItem = ({ item }: { item: HistoryItem }) => (
+    const loadHistory = () => {
+        const sessions = getChatSessions();
+        setHistory(sessions);
+    };
+
+    const handleOpenChat = (item: ChatSession) => {
+        navigation.navigate("Chat", {
+            chatId: item.id,
+            title: item.title,
+        });
+    };
+
+    const handleDelete = (id: string) => {
+        Alert.alert("Delete Chat", "Are you sure?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => {
+                    deleteSession(id);
+                    loadHistory();
+                },
+            },
+        ]);
+    };
+
+    const renderItem = ({ item }: { item: ChatSession }) => (
         <List.Item
             title={item.title}
             description={item.subtitle}
@@ -57,8 +64,9 @@ const HistoryScreen = ({ navigation }: any) => {
                 color: theme.colors.onSurfaceVariant,
                 marginTop: 4,
             }}
+            descriptionNumberOfLines={2}
             right={() => (
-                <View style={styles.dateContainer}>
+                <View style={styles.rightContainer}>
                     <Text
                         style={[
                             styles.dateText,
@@ -67,9 +75,15 @@ const HistoryScreen = ({ navigation }: any) => {
                     >
                         {item.date}
                     </Text>
+                    <IconButton
+                        icon="trash-can-outline"
+                        size={16}
+                        onPress={() => handleDelete(item.id)}
+                        style={{ margin: 0, marginTop: 4 }}
+                    />
                 </View>
             )}
-            onPress={() => console.log(`Open chat ${item.id}`)}
+            onPress={() => handleOpenChat(item)}
             style={styles.listItem}
         />
     );
@@ -91,6 +105,13 @@ const HistoryScreen = ({ navigation }: any) => {
                     title="History"
                     titleStyle={styles.headerTitle}
                 />
+                <Appbar.Action
+                    icon="plus"
+                    onPress={() =>
+                        navigation.navigate("Chat", { startNewChat: true })
+                    }
+                    color={theme.colors.primary}
+                />
             </Appbar.Header>
 
             <FlatList
@@ -107,6 +128,7 @@ const HistoryScreen = ({ navigation }: any) => {
                             textAlign: "center",
                             marginTop: 20,
                             color: theme.colors.onSurfaceVariant,
+                            fontFamily: "JetBrainsMono",
                         }}
                     >
                         No history found.
@@ -131,13 +153,15 @@ const styles = StyleSheet.create({
     listItem: {
         paddingVertical: 12,
     },
-    dateContainer: {
-        justifyContent: "center",
+    rightContainer: {
+        alignItems: "flex-end",
+        justifyContent: "flex-start",
         paddingLeft: 8,
     },
     dateText: {
         fontFamily: "JetBrainsMono",
         fontSize: 10,
+        marginBottom: 0,
     },
 });
 

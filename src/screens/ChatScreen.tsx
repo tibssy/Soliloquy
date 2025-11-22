@@ -25,6 +25,13 @@ import ModelSelectorBanner from "../components/ModelSelectorBanner";
 import ChatBubble from "../components/ChatBubble";
 import { Message } from "../types/chat";
 import { getModelNameById } from "../data/models";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
+import {
+    saveChatSession,
+    saveMessages,
+    getMessages,
+    ChatSession,
+} from "../utils/storage";
 
 const STOP_WORDS = [
     "</s>",
@@ -40,7 +47,7 @@ const STOP_WORDS = [
     "Assistant:",
 ];
 
-const ChatScreen = ({ navigation }: any) => {
+const ChatScreen = ({ navigation, route }: any) => {
     const theme = useTheme();
     const [text, setText] = useState("");
     const [isSheetVisible, setIsSheetVisible] = useState(false);
@@ -51,6 +58,7 @@ const ChatScreen = ({ navigation }: any) => {
     const [currentResponse, setCurrentResponse] = useState("");
     const [conversationTitle, setConversationTitle] = useState<string>("");
     const responseRef = useRef("");
+    const [sessionId, setSessionId] = useState<string | null>(null);
 
     const {
         activeModelId,
@@ -62,7 +70,67 @@ const ChatScreen = ({ navigation }: any) => {
 
     useEffect(() => {
         NavigationBar.setBackgroundColorAsync(theme.colors.surfaceVariant);
-    });
+
+        return () => {
+            deactivateKeepAwake("chat-generation");
+        };
+    }, [theme]);
+
+    // LOAD CHAT IF NAVIGATED FROM HISTORY
+    useEffect(() => {
+        if (route.params?.chatId) {
+            const id = route.params.chatId;
+            const loadedMessages = getMessages(id);
+            const loadedTitle = route.params.title || "";
+
+            setSessionId(id);
+            setMessages(loadedMessages);
+            setConversationTitle(loadedTitle);
+
+            navigation.setParams({ chatId: undefined, title: undefined });
+        }
+    }, [route.params]);
+
+    // HANDLE NEW CHAT RESET
+    useEffect(() => {
+        if (route.params?.startNewChat) {
+            setMessages([]);
+            setConversationTitle("");
+            setText("");
+            setSessionId(null);
+            navigation.setParams({ startNewChat: undefined });
+        }
+    }, [route.params]);
+
+    // 3. AUTO-SAVE LOGIC
+    useEffect(() => {
+        if (messages.length === 0) return;
+
+        const currentId = sessionId || Date.now().toString();
+
+        if (!sessionId) {
+            setSessionId(currentId);
+        }
+
+        const lastMsg = messages[messages.length - 1];
+        const preview =
+            lastMsg.role === "user"
+                ? `You: ${lastMsg.content}`
+                : lastMsg.content;
+
+        const session: ChatSession = {
+            id: currentId,
+            title: conversationTitle || "New Conversation",
+            subtitle: preview.substring(0, 100),
+            date: new Date().toLocaleDateString(),
+            lastModified: Date.now(),
+            modelId: activeModelId || undefined,
+        };
+
+        // Persist to MMKV
+        saveChatSession(session);
+        saveMessages(currentId, messages);
+    }, [messages, conversationTitle]);
 
     // --- AI TITLE GENERATOR ---
     const generateConversationTitle = async (userMessage: string) => {
@@ -112,6 +180,8 @@ const ChatScreen = ({ navigation }: any) => {
         setCurrentResponse("");
         responseRef.current = "";
 
+        await activateKeepAwakeAsync("chat-generation");
+
         try {
             await llama.completion(
                 {
@@ -159,6 +229,8 @@ const ChatScreen = ({ navigation }: any) => {
                 (prev) => prev + "\n[Error generating response]"
             );
             setIsGenerating(false);
+        } finally {
+            await deactivateKeepAwake("chat-generation");
         }
     };
 
