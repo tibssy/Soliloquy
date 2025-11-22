@@ -24,6 +24,7 @@ import { useLlama } from "../context/LlamaContext";
 import ModelSelectorBanner from "../components/ModelSelectorBanner";
 import ChatBubble from "../components/ChatBubble";
 import { Message } from "../types/chat";
+import { getModelNameById } from "../data/models";
 
 const STOP_WORDS = [
     "</s>",
@@ -49,7 +50,8 @@ const ChatScreen = ({ navigation }: any) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [currentResponse, setCurrentResponse] = useState("");
 
-    // Llama Context
+    const responseRef = useRef("");
+
     const {
         activeModelId,
         isModelLoading,
@@ -57,7 +59,6 @@ const ChatScreen = ({ navigation }: any) => {
         isModelLoaded,
         llama,
     } = useLlama();
-    const flatListRef = useRef<FlatList>(null);
 
     useEffect(() => {
         NavigationBar.setBackgroundColorAsync(theme.colors.surfaceVariant);
@@ -73,11 +74,11 @@ const ChatScreen = ({ navigation }: any) => {
             content: text.trim(),
         };
 
-        const updatedMessages = [...messages, userMessage];
-        setMessages(updatedMessages);
+        setMessages((prev) => [...prev, userMessage]);
         setText("");
         setIsGenerating(true);
         setCurrentResponse("");
+        responseRef.current = "";
 
         try {
             await llama.completion(
@@ -88,7 +89,7 @@ const ChatScreen = ({ navigation }: any) => {
                             content:
                                 "You are Soliloquy, a helpful and private AI assistant running locally on the user's device.",
                         },
-                        ...updatedMessages.map((m) => ({
+                        ...[...messages, userMessage].map((m) => ({
                             role: m.role,
                             content: m.content,
                         })),
@@ -98,47 +99,51 @@ const ChatScreen = ({ navigation }: any) => {
                     temperature: 0.7,
                 },
                 (data: { token: string }) => {
+                    responseRef.current += data.token;
                     setCurrentResponse((prev) => prev + data.token);
                 }
             );
+
+            if (responseRef.current.length > 0) {
+                const assistantMsg: Message = {
+                    id: Date.now().toString(),
+                    role: "assistant",
+                    content: responseRef.current,
+                };
+
+                setMessages((prev) => [...prev, assistantMsg]);
+                setCurrentResponse("");
+                setIsGenerating(false);
+            } else {
+                setIsGenerating(false);
+            }
         } catch (e) {
             console.error("Generation Error:", e);
             setCurrentResponse(
                 (prev) => prev + "\n[Error generating response]"
             );
-        } finally {
             setIsGenerating(false);
         }
     };
-
-    useEffect(() => {
-        if (!isGenerating && currentResponse.length > 0) {
-            const assistantMsg: Message = {
-                id: Date.now().toString(),
-                role: "assistant",
-                content: currentResponse,
-            };
-            setMessages((prev) => [...prev, assistantMsg]);
-            setCurrentResponse("");
-        }
-    }, [isGenerating]);
-
-    // Auto-scroll
-    useEffect(() => {
-        if (messages.length > 0 || currentResponse.length > 0) {
-            setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
-        }
-    }, [messages, currentResponse]);
 
     // --- UI HELPERS ---
     const getModelName = () => {
         if (isModelLoading) return "Loading...";
         if (!activeModelId) return "Select Model";
-        if (activeModelId.includes("gemma")) return "Gemma 3";
-        if (activeModelId.includes("llama")) return "Llama 3.2";
-        return "Soliloquy";
+        return getModelNameById(activeModelId);
+    };
+
+    const reversedMessages = [...messages].reverse();
+
+    const renderStreamingBubble = () => {
+        if (!currentResponse) return null;
+
+        const streamingMessage: Message = {
+            id: "streaming-temp",
+            role: "assistant",
+            content: currentResponse,
+        };
+        return <ChatBubble message={streamingMessage} isStreaming={true} />;
     };
 
     return (
@@ -158,19 +163,11 @@ const ChatScreen = ({ navigation }: any) => {
                 mode="center-aligned"
                 elevated
             >
-                {/* History Icon (Left) */}
                 <Appbar.Action
                     icon="history"
                     onPress={() => navigation.navigate("History")}
                 />
 
-                {/* Title (Center) */}
-                {/* <Appbar.Content
-                    title="Soliloquy"
-                    titleStyle={styles.headerTitle}
-                /> */}
-
-                {/* CLICKABLE TITLE AREA */}
                 <View style={styles.titleContainer}>
                     <TouchableOpacity
                         onPress={() => setIsSheetVisible(!isSheetVisible)}
@@ -195,7 +192,6 @@ const ChatScreen = ({ navigation }: any) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Settings Icon (Right) */}
                 <Appbar.Action
                     icon="cog"
                     onPress={() => navigation.navigate("Settings")}
@@ -217,7 +213,6 @@ const ChatScreen = ({ navigation }: any) => {
                 onDismiss={() => setIsSheetVisible(false)}
                 onManageModels={() => {
                     setIsSheetVisible(false);
-                    // navigation.navigate("Settings");
                     navigation.navigate("Models");
                 }}
             />
@@ -248,41 +243,15 @@ const ChatScreen = ({ navigation }: any) => {
                     </View>
                 ) : (
                     <FlatList
-                        ref={flatListRef}
-                        data={messages}
+                        data={reversedMessages}
                         keyExtractor={(item) => item.id}
                         renderItem={({ item }) => <ChatBubble message={item} />}
+                        inverted={true}
                         contentContainerStyle={styles.listContent}
-                        ListFooterComponent={
-                            isGenerating ? (
-                                <View
-                                    style={{
-                                        marginTop: 8,
-                                        marginBottom: 24,
-                                        paddingHorizontal: 4,
-                                    }}
-                                >
-                                    <Text
-                                        style={{
-                                            color: theme.colors.onSurface,
-                                            fontFamily: "JetBrainsMono",
-                                            fontSize: 15,
-                                            lineHeight: 24,
-                                        }}
-                                    >
-                                        {currentResponse}
-                                        <Text
-                                            style={{
-                                                color: theme.colors.primary,
-                                            }}
-                                        >
-                                            {" "}
-                                            ▋
-                                        </Text>
-                                    </Text>
-                                </View>
-                            ) : null
+                        ListHeaderComponent={
+                            isGenerating ? renderStreamingBubble() : null
                         }
+                        removeClippedSubviews={false}
                     />
                 )}
             </View>
@@ -370,7 +339,9 @@ const styles = StyleSheet.create({
     },
     listContent: {
         padding: 16,
-        paddingBottom: 24,
+        paddingBottom: 8,
+        flexGrow: 1,
+        justifyContent: "flex-end",
     },
     titleContainer: {
         flex: 1,

@@ -11,35 +11,7 @@ import {
 } from "react-native-paper";
 import { Directory, Paths } from "expo-file-system";
 import { useLlama } from "../context/LlamaContext";
-
-type ModelDef = {
-    id: string;
-    name: string;
-    filename: string;
-};
-
-const AVAILABLE_MODELS: ModelDef[] = [
-    {
-        id: "gemma-270m",
-        name: "Gemma 3 270M",
-        filename: "gemma-3-270m-it-Q4_K_M.gguf",
-    },
-    {
-        id: "gemma-1b",
-        name: "Gemma 3 1B",
-        filename: "gemma-3-1b-it-Q4_K_M.gguf",
-    },
-    {
-        id: "llama-3.2-1b",
-        name: "Llama 3.2 1B",
-        filename: "Llama-3.2-1B-Instruct-Q4_K_M.gguf",
-    },
-    {
-        id: "Llama-3.2-3B",
-        name: "Llama 3.2 3B",
-        filename: "Llama-3.2-3B-Instruct-Q4_K_M.gguf",
-    },
-];
+import { AVAILABLE_MODELS, ModelDef } from "../data/models";
 
 interface Props {
     visible: boolean;
