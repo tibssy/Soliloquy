@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import {
     Banner,
@@ -7,7 +7,6 @@ import {
     useTheme,
     ActivityIndicator,
     Icon,
-    Button,
 } from "react-native-paper";
 import { Directory, Paths } from "expo-file-system";
 import { useLlama } from "../context/LlamaContext";
@@ -21,7 +20,8 @@ interface Props {
 
 const ModelSelectorBanner = ({ visible, onDismiss, onManageModels }: Props) => {
     const theme = useTheme();
-    const { loadModel, activeModelId, isModelLoading } = useLlama();
+    const { loadModel, activeModelId, isModelLoading, unloadModel } =
+        useLlama();
     const [downloadedModels, setDownloadedModels] = useState<string[]>([]);
 
     useEffect(() => {
@@ -45,6 +45,32 @@ const ModelSelectorBanner = ({ visible, onDismiss, onManageModels }: Props) => {
         onDismiss();
     };
 
+    const bannerActions = useMemo(() => {
+        const actions = [
+            {
+                label: "Manage Models",
+                onPress: onManageModels,
+            },
+        ];
+
+        if (activeModelId) {
+            actions.push({
+                label: "Unload",
+                onPress: () => {
+                    unloadModel();
+                    onDismiss();
+                },
+            });
+        }
+
+        actions.push({
+            label: "Close",
+            onPress: onDismiss,
+        });
+
+        return actions;
+    }, [activeModelId, onManageModels, onDismiss, unloadModel]);
+
     return (
         <Banner
             visible={visible}
@@ -52,16 +78,7 @@ const ModelSelectorBanner = ({ visible, onDismiss, onManageModels }: Props) => {
             icon={({ size }) => (
                 <Icon source="brain" size={size} color={theme.colors.primary} />
             )}
-            actions={[
-                {
-                    label: "Manage Models",
-                    onPress: onManageModels,
-                },
-                {
-                    label: "Close",
-                    onPress: onDismiss,
-                },
-            ]}
+            actions={bannerActions}
             style={{ backgroundColor: theme.colors.background }}
         >
             <View style={styles.contentContainer}>

@@ -49,7 +49,7 @@ const ChatScreen = ({ navigation }: any) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
     const [currentResponse, setCurrentResponse] = useState("");
-
+    const [conversationTitle, setConversationTitle] = useState<string>("");
     const responseRef = useRef("");
 
     const {
@@ -64,15 +64,47 @@ const ChatScreen = ({ navigation }: any) => {
         NavigationBar.setBackgroundColorAsync(theme.colors.surfaceVariant);
     });
 
+    // --- AI TITLE GENERATOR ---
+    const generateConversationTitle = async (userMessage: string) => {
+        if (!llama) return;
+        try {
+            const contextText =
+                userMessage.length > 300
+                    ? userMessage.substring(0, 300) + "..."
+                    : userMessage;
+
+            const prompt = `\n\nSystem: Generate a very short title (maximum 5 words) for this input: "${contextText}". Do not use quotes.\nTitle:`;
+
+            const result = await llama.completion({
+                prompt: prompt,
+                n_predict: 12,
+                stop: ["\n", ...STOP_WORDS],
+            });
+
+            const cleanTitle = result.text
+                .trim()
+                .replace(/^"|"$/g, "")
+                .replace(/\.$/, "");
+            if (cleanTitle) {
+                setConversationTitle(cleanTitle);
+            }
+        } catch (e) {
+            console.log("Failed to generate title", e);
+        }
+    };
+
     // --- CHAT LOGIC ---
     const handleSend = async () => {
         if (!text.trim() || !llama || isGenerating) return;
 
+        const userText = text.trim();
         const userMessage: Message = {
             id: Date.now().toString(),
             role: "user",
-            content: text.trim(),
+            content: userText,
         };
+
+        const isFirstMessage = messages.length === 0;
 
         setMessages((prev) => [...prev, userMessage]);
         setText("");
@@ -114,6 +146,10 @@ const ChatScreen = ({ navigation }: any) => {
                 setMessages((prev) => [...prev, assistantMsg]);
                 setCurrentResponse("");
                 setIsGenerating(false);
+
+                if (!conversationTitle && userText.length > 12) {
+                    generateConversationTitle(userText);
+                }
             } else {
                 setIsGenerating(false);
             }
@@ -126,12 +162,14 @@ const ChatScreen = ({ navigation }: any) => {
         }
     };
 
-    // --- UI HELPERS ---
-    const getModelName = () => {
-        if (isModelLoading) return "Loading...";
-        if (!activeModelId) return "Select Model";
-        return getModelNameById(activeModelId);
-    };
+    // --- TITLE HELPERS ---
+    const mainTitle = conversationTitle || "Soliloquy";
+
+    const subTitle = isModelLoading
+        ? "Loading Brain..."
+        : activeModelId
+        ? getModelNameById(activeModelId)
+        : "Select Model";
 
     const reversedMessages = [...messages].reverse();
 
@@ -159,6 +197,7 @@ const ChatScreen = ({ navigation }: any) => {
                 style={{
                     backgroundColor: theme.colors.background,
                     elevation: 8,
+                    height: 64,
                 }}
                 mode="center-aligned"
                 elevated
@@ -174,19 +213,35 @@ const ChatScreen = ({ navigation }: any) => {
                         style={styles.titleButton}
                         disabled={isModelLoading}
                     >
-                        <Text
-                            style={[
-                                styles.headerTitle,
-                                { color: theme.colors.onSurface },
-                            ]}
-                        >
-                            {getModelName()}
-                        </Text>
+                        <View style={styles.titleTextColumn}>
+                            {/* Main Title */}
+                            <Text
+                                style={[
+                                    styles.headerTitle,
+                                    { color: theme.colors.onSurface },
+                                ]}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                            >
+                                {mainTitle}
+                            </Text>
+                            <Text
+                                style={[
+                                    styles.headerSubtitle,
+                                    { color: theme.colors.primary },
+                                ]}
+                                numberOfLines={1}
+                            >
+                                {subTitle}
+                            </Text>
+                        </View>
+
+                        {/* Chevron */}
                         <Icon
                             source={
                                 isSheetVisible ? "chevron-up" : "chevron-down"
                             }
-                            size={20}
+                            size={18}
                             color={theme.colors.onSurfaceVariant}
                         />
                     </TouchableOpacity>
@@ -330,9 +385,24 @@ const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
     },
+    titleContainer: {
+        flex: 1,
+        alignItems: "center",
+    },
+    titleTextColumn: {
+        alignItems: "center",
+        justifyContent: "center",
+        maxWidth: "50%",
+    },
     headerTitle: {
         fontFamily: "JetBrainsMono",
         fontWeight: "bold",
+        fontSize: 16,
+    },
+    headerSubtitle: {
+        fontFamily: "JetBrainsMono",
+        fontSize: 12,
+        opacity: 0.8,
     },
     chatContainer: {
         flex: 1,
@@ -343,17 +413,11 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         justifyContent: "flex-end",
     },
-    titleContainer: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    },
     titleButton: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 4,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        justifyContent: "center",
+        gap: 6,
     },
     placeholderContainer: {
         flex: 1,
